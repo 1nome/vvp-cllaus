@@ -56,14 +56,9 @@ while running:
     base_offset = ((-x_offset if x_offset < 0 else 0) // size, (-y_offset if y_offset < 0 else 0) // size)
     visible_dims = ((screen_dims[0] // size + 1), (screen_dims[1] // size + 1))
 
-    # zooms in the opposite direction for some reason
     def zoom(dir, x_pos, y_pos):
         newsize = size + (1 if dir else (-1 if size > 1 else 0))
-        x_rel = x_pos - screen_dims[0]
-        y_rel = y_pos - screen_dims[1]
-        x_cur = x_offset + x_pos - screen_dims[0]
-        y_cur = y_offset + y_pos - screen_dims[1]
-        return (((x_offset + x_rel) // size) * newsize - x_rel, ((y_offset + y_rel) // size) * newsize - y_rel, newsize)
+        return (((x_offset - x_pos) // size) * newsize + x_pos, ((y_offset - y_pos) // size) * newsize + y_pos, newsize)
 
     # event handling
     for event in pygame.event.get():
