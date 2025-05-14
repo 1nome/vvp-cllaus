@@ -40,11 +40,15 @@ y_offset = 100
 
 ups_desired = 5
 fps_desired = 180
+kbmove = 10
 time_since_last_update = 0
 
 mouse_down = False
 mouse_move = False
 paused = False
+move_x = 0
+move_y = 0
+crosshair = False
 
 while running:
 
@@ -89,14 +93,52 @@ while running:
                 x_offset += event.rel[0]
                 y_offset += event.rel[1]
         if event.type == pygame.KEYDOWN:
+            #pause
             if event.key == pygame.K_SPACE:
                 paused = not paused
+            # restart
             if event.key == pygame.K_r:
                 universe = np.zeros_like(universe)
+            # zoom
             if event.key in (pygame.K_EQUALS, pygame.K_KP_PLUS):
                 x_offset, y_offset, size = zoom(True, screen_dims[0] // 2, screen_dims[1] // 2)
             if event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
                 x_offset, y_offset, size = zoom(False, screen_dims[0] // 2, screen_dims[1] // 2)
+            # move
+            if event.key == pygame.K_h:
+                move_x += kbmove
+            if event.key == pygame.K_j:
+                move_y -= kbmove
+            if event.key == pygame.K_k:
+                move_y += kbmove
+            if event.key == pygame.K_l:
+                move_x -= kbmove
+            if event.key == pygame.K_i:
+                crosshair = True
+                pass
+
+        if event.type == pygame.KEYUP:
+            # move
+            if event.key == pygame.K_h:
+                move_x -= kbmove
+            if event.key == pygame.K_j:
+                move_y += kbmove
+            if event.key == pygame.K_k:
+                move_y -= kbmove
+            if event.key == pygame.K_l:
+                move_x += kbmove
+            # modyfying the universe
+            if event.key == pygame.K_i:
+                x = (-x_offset + screen_dims[0] // 2) // size
+                y = (-y_offset + screen_dims[1] // 2) // size
+                if 0 < x < universe.shape[0] and 0 < y < universe.shape[1]:
+                    universe[x, y] = not universe[x, y]
+                crosshair = False
+
+
+    # keyboard move
+    x_offset += move_x
+    y_offset += move_y
 
     # clear image
     screen.fill("black")
@@ -111,6 +153,10 @@ while running:
             if universe[x, y]:
                 pygame.draw.rect(screen, "white",
                                  (x * size + x_offset, y * size + y_offset, size, size))
+    if crosshair:
+        x = (-x_offset + screen_dims[0] // 2) // size
+        y = (-y_offset + screen_dims[1] // 2) // size
+        pygame.draw.rect(screen, "red", (x * size + x_offset, y * size + y_offset, size, size), 1)
     
     # updating CA
     if time_since_last_update > 1 / ups_desired:
