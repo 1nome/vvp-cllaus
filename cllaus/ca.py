@@ -19,3 +19,6 @@ def conwayNaive(universe: NDArray[np.bool_]):
                 universe[i, j] = np.False_
             elif n_neighbours[i, j] == 3 and not universe[i, j]:
                 universe[i, j] = np.True_
+
+def none(universe: NDArray):
+    return

@@ -1,3 +1,7 @@
 import cllaus
 
-cllaus.visualize(cllaus.conwayNaive)
+cllaus.window_dims([1920, 1080])
+cllaus.rule(cllaus.ca.conwayNaive)
+cllaus.cell_size(30)
+cllaus.universe_dims([200, 200])
+cllaus.display()

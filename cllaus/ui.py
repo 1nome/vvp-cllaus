@@ -1,22 +1,21 @@
 import pygame
 import numpy as np
-from collections.abc import Callable
+from .core import vizState
 
-def visualize(ca: Callable):
+def ui(config: vizState):
 
-    universe = np.zeros((100, 100), dtype=np.bool_)
-
+    universe = config.universe
     # glider
     universe[[2, 3, 1, 2, 3], [1, 2, 3, 3, 3]] = True
 
-    screen_dims = (1280, 720)
+    screen_dims = config.screen_dims
 
     pygame.init()
     screen = pygame.display.set_mode(screen_dims)
     clock = pygame.time.Clock()
     running = True
 
-    size = 20
+    size = config.cell_size
     x_offset = 100
     y_offset = 100
 
@@ -137,7 +136,7 @@ def visualize(ca: Callable):
         
         # updating CA
         if time_since_last_update > 1 / ups_desired:
-            ca(universe)
+            config.ca(universe)
             time_since_last_update -= 1 / ups_desired
 
         # presenting image

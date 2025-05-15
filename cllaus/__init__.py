@@ -1,4 +1,5 @@
-from .ca import conwayNaive
-from .ui import visualize
+from .core import display, rule, cell_size, window_dims, universe_dims
+from .ca import conwayNaive, none
 
-__all__ = ['conwayNaive', 'visualize']
+__all__ = ['display', 'rule', 'cell_size', 'window_dims', 'universe_dims',
+           'conwayNaive', 'none']
