@@ -10,8 +10,6 @@ AVG_OVER = 64
 def ui(config: vizState):
 
     universe = config.universe
-    # glider
-    universe[[2, 3, 1, 2, 3], [1, 2, 3, 3, 3]] = True
 
     screen_dims = config.screen_dims
 
@@ -35,7 +33,7 @@ def ui(config: vizState):
 
     mouse_down = False
     mouse_move = False
-    paused = False
+    paused = config.paused
     move_x = 0
     move_y = 0
     crosshair = False
@@ -164,12 +162,12 @@ def ui(config: vizState):
         screen.fill("black")
 
         # rendering
-        pygame.draw.rect(screen, "red", (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
         for x in range(base_offset_x, clamp(base_offset_x + visible_dims_x, universe.shape[0])):
             for y in range(base_offset_y, clamp(base_offset_y + visible_dims_y, universe.shape[1])):
                 if universe[x, y]:
                     pygame.draw.rect(screen, "white",
                                     (x * size + x_offset, y * size + y_offset, size, size))
+        pygame.draw.rect(screen, "red", (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
         if crosshair:
             x = (-x_offset + screen_dims[0] // 2) // size
             y = (-y_offset + screen_dims[1] // 2) // size
