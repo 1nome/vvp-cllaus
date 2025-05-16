@@ -3,6 +3,9 @@ import numpy as np
 from .core import vizState
 
 FONT_SIZE = 32
+STATS_OFFSET_X = 250
+STATS_PAD_Y = 5
+AVG_OVER = 64
 
 def ui(config: vizState):
 
@@ -52,12 +55,12 @@ def ui(config: vizState):
             if self.idx == self.arr.shape[0]:
                 self.idx = 0
     
-    fps = Long_avg(64)
-    ups = Long_avg(64)
+    fps = Long_avg(AVG_OVER)
+    ups = Long_avg(AVG_OVER)
     ups_s = ups_desired
 
-    show_fps = True
-    show_ups = True
+    show_fps = config.show_fps
+    show_ups = config.show_ups
 
     while running:
 
@@ -148,7 +151,6 @@ def ui(config: vizState):
         if show_ups:
             stats.append(f"ups: {ups():.0f}/{ups_desired:.0f}")
 
-
         def clamp(a, max):
             return a if a < max else max
         
@@ -172,11 +174,11 @@ def ui(config: vizState):
             x = (-x_offset + screen_dims[0] // 2) // size
             y = (-y_offset + screen_dims[1] // 2) // size
             pygame.draw.rect(screen, "red", (x * size + x_offset, y * size + y_offset, size, size), 1)
-        o = 0
+        o = STATS_PAD_Y
         for s in stats:
             text = font.render(s, True, "white")
             rect = text.get_rect()
-            rect.topleft = (screen_dims[0] - 200, o)
+            rect.topleft = (screen_dims[0] - STATS_OFFSET_X, o)
             screen.blit(text, rect)
             o += FONT_SIZE
         

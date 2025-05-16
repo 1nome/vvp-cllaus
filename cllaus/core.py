@@ -1,4 +1,3 @@
-from collections.abc import Callable
 from typing import List
 import numpy as np
 from numpy.typing import NDArray
@@ -14,6 +13,8 @@ class vizState:
         self.fps_desired: int | float = 60
         self.ups_desired: int | float = 5
         self.kb_move = 1000
+        self.show_fps = False
+        self.show_ups = False
         
     def reset(self):
         self.__init__()
@@ -47,3 +48,9 @@ def fps(fps: int | float):
 
 def ups(ups: int | float):
     _config.ups_desired = ups
+
+def toggle_fps():
+    _config.show_fps = not _config.show_fps
+
+def toggle_ups():
+    _config.show_ups = not _config.show_ups
