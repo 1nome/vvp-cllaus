@@ -2,13 +2,13 @@ from collections.abc import Callable
 from typing import List
 import numpy as np
 from numpy.typing import NDArray
+from .ca import CA, NoRule
 
 class vizState:
     def __init__(self):
         self.screen_dims = [1280, 720]
         self.cell_size = 20
-        from .ca import none
-        self.ca = none
+        self.ca: CA = NoRule()
         self.universe = np.zeros((100, 100), dtype=np.int8)
         self.dtype = np.int8
         
@@ -22,7 +22,7 @@ def display():
     from .ui import ui
     ui(_config)
 
-def rule(ca: Callable[[NDArray], None]):
+def rule(ca: CA):
     _config.ca = ca
 
 def window_dims(dims: List[int]):
