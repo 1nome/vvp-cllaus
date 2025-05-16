@@ -18,9 +18,9 @@ class ConwayNaive(CA):
     
     def __call__(self, universe: NDArray[np.int8]):
         if self.n_neighbours.shape != universe.shape:
-            self.n_neighbours = np.zeros_like(universe)
-        else:
-            self.n_neighbours.fill(0)
+            self.n_neighbours.resize(universe.shape)
+
+        self.n_neighbours.fill(0)
 
         for i in range(1, universe.shape[0] - 1):
             for j in range(1, universe.shape[1] - 1):
