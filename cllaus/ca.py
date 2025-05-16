@@ -4,15 +4,17 @@ from typing import List, Tuple, Literal
 
 class CA:
     def __init__(self):
-        pass
+        self.name = "My CA"
     def __call__(self, universe):
         pass
 
 class NoRule(CA):
-    pass
+    def __init__(self):
+        self.name = "Nothing"
 
 class ConwayNaive(CA):
     def __init__(self):
+        self.name = "Conway's game of life, naive implementation"
         self.relative_neighbours = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
     

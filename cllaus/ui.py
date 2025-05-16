@@ -2,6 +2,8 @@ import pygame
 import numpy as np
 from .core import vizState
 
+FONT_SIZE = 32
+
 def ui(config: vizState):
 
     universe = config.universe
@@ -12,8 +14,11 @@ def ui(config: vizState):
 
     pygame.init()
     screen = pygame.display.set_mode(screen_dims)
+    pygame.display.set_caption("cllaus | displaying " + config.ca.name)
     clock = pygame.time.Clock()
     running = True
+
+    font = pygame.font.Font("freesansbold.ttf", FONT_SIZE)
 
     size = config.cell_size
     x_offset = 0
@@ -23,7 +28,7 @@ def ui(config: vizState):
     fps_desired = config.fps_desired
     kb_move = config.kb_move
     time_since_last_update = 0
-    dt = 0e-5
+    dt = clock.tick(fps_desired) / 1000 + 0e-6
 
     mouse_down = False
     mouse_move = False
@@ -32,11 +37,37 @@ def ui(config: vizState):
     move_y = 0
     crosshair = False
 
+    class Long_avg:
+        """
+        Calculates the average value over n samples.
+        """
+        def __init__(self, n):
+            self.idx = 0
+            self.arr = np.zeros(n)
+        def __call__(self):
+            return np.sum(self.arr) / self.arr.shape[0]
+        def add(self, val):
+            self.arr[self.idx] = val
+            self.idx += 1
+            if self.idx == self.arr.shape[0]:
+                self.idx = 0
+    
+    fps = Long_avg(64)
+    ups = Long_avg(64)
+    ups_s = ups_desired
+
+    show_fps = True
+    show_ups = True
+
     while running:
 
-        def zoom(dir, x_pos, y_pos):
+        def zoom(dir, cur_x, cur_y):
+            """
+            Updates cell size while keeping it above 0.
+            Also updates offsets so that the cursor points to the same place.
+            """
             newsize = size + (1 if dir else (-1 if size > 1 else 0))
-            return (((x_offset - x_pos) // size) * newsize + x_pos, ((y_offset - y_pos) // size) * newsize + y_pos, newsize)
+            return ((x_offset - cur_x) // size) * newsize + cur_x, ((y_offset - cur_y) // size) * newsize + cur_y, newsize
 
         # event handling
         for event in pygame.event.get():
@@ -110,8 +141,13 @@ def ui(config: vizState):
         x_offset += int(move_x / fps_desired)
         y_offset += int(move_y / fps_desired)
 
-        # clear image
-        screen.fill("black")
+        # stats
+        stats = []
+        if show_fps:
+            stats.append(f"fps: {fps():.0f}/{fps_desired:.0f}")
+        if show_ups:
+            stats.append(f"ups: {ups():.0f}/{ups_desired:.0f}")
+
 
         def clamp(a, max):
             return a if a < max else max
@@ -121,6 +157,9 @@ def ui(config: vizState):
         base_offset_y = (-y_offset if y_offset < 0 else 0) // size
         visible_dims_x = (screen_dims[0] // size + 1)
         visible_dims_y = (screen_dims[1] // size + 1)
+
+        # clear image
+        screen.fill("black")
 
         # rendering
         pygame.draw.rect(screen, "red", (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
@@ -133,11 +172,19 @@ def ui(config: vizState):
             x = (-x_offset + screen_dims[0] // 2) // size
             y = (-y_offset + screen_dims[1] // 2) // size
             pygame.draw.rect(screen, "red", (x * size + x_offset, y * size + y_offset, size, size), 1)
+        o = 0
+        for s in stats:
+            text = font.render(s, True, "white")
+            rect = text.get_rect()
+            rect.topleft = (screen_dims[0] - 200, o)
+            screen.blit(text, rect)
+            o += FONT_SIZE
         
         # updating CA
-        if time_since_last_update > 1 / ups_desired:
+        if time_since_last_update > (1 / ups_desired):
+            ups_s = 1 / time_since_last_update
             config.ca(universe)
-            time_since_last_update -= 1 / ups_desired
+            time_since_last_update = 0
 
         # presenting image
         pygame.display.flip()
@@ -149,5 +196,7 @@ def ui(config: vizState):
         dt = clock.tick(fps_desired) / 1000
         if not paused:
             time_since_last_update += dt
+        fps.add(clock.get_fps())
+        ups.add(ups_s)
 
     pygame.quit()
