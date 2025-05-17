@@ -37,13 +37,14 @@ def ui(config: vizState):
     paused = config.paused
     move_x = 0
     move_y = 0
-    crosshair = False
+    crosshair = config.crosshair
     visual = False
     insert = False
     ix = 0
     iy = 0
     vx = 0
     vy = 0
+    reg = np.array([[0]], dtype=universe.dtype)
 
     class Long_avg:
         """
@@ -69,6 +70,8 @@ def ui(config: vizState):
 
     while running:
 
+        # centre of the creen coords
+
         def zoom(dir, cur_x, cur_y):
             """
             Updates cell size while keeping it above 0.
@@ -90,6 +93,8 @@ def ui(config: vizState):
         
         def clamp(a, max, min = 0):
             return min if a < min else (max if a > max else a)
+        
+        nx, ny = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2)
 
         # event handling
         for event in pygame.event.get():
@@ -163,22 +168,46 @@ def ui(config: vizState):
                     else:
                         move_x -= kb_move
                 # editing
-                elif event.key == pygame.K_a and (insert or visual):
-                    if insert:
+                elif event.key == pygame.K_a:
+                    if not (insert or visual):
+                        ix, iy = nx, ny
+                    if not visual:
                         vx, vy = ix, iy
                     universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1] =\
                         config.ca.next_vals[universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]]
+                elif (event.key == pygame.K_p) or (event.key == pygame.K_v and event.mod & pygame.KMOD_CTRL):
+                    x = ix if insert else vx if visual else clamp(nx, universe.shape[0])
+                    y = iy if insert else vy if visual else clamp(ny, universe.shape[1])
+                    sx = clamp(x + reg.shape[0], universe.shape[0]) - x
+                    sy = clamp(y + reg.shape[1], universe.shape[1]) - y
+                    universe[x:x + sx, y:y + sy] = reg[0:sx, 0:sy]
+                elif (event.key == pygame.K_y) or (event.key == pygame.K_c and event.mod & pygame.KMOD_CTRL):
+                    if not (insert or visual):
+                        ix, iy = nx, ny
+                    if not visual:
+                        vx, vy = ix, iy
+                    reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]
+                elif (event.key == pygame.K_d) or (event.key == pygame.K_x and event.mod & pygame.KMOD_CTRL):
+                    if not (insert or visual):
+                        ix, iy = nx, ny
+                    if not visual:
+                        vx, vy = ix, iy
+                    reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]
+                    universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1].fill(0)
                 # modes
                 elif event.key == pygame.K_i and not (insert or visual):
                     insert = True
+                    crosshair = False
                     ix, iy = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2, True)
                 elif event.key == pygame.K_v and not (insert or visual):
                     ix, iy = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2, True)
                     vx, vy = ix, iy
                     visual = True
+                    crosshair = False
                 elif event.key == pygame.K_ESCAPE:
                     insert = False
                     visual = False
+                    crosshair = True if config.crosshair else False
             elif event.type == pygame.KEYUP:
                 # move
                 if event.key in (pygame.K_h, pygame.K_LEFT):
@@ -222,9 +251,10 @@ def ui(config: vizState):
                                     (x * size + x_offset, y * size + y_offset, size, size))
         pygame.draw.rect(screen, config.colors[1], (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
         if crosshair:
-            x = (-x_offset + screen_dims[0] // 2) // size
-            y = (-y_offset + screen_dims[1] // 2) // size
-            pygame.draw.rect(screen, config.colors[2], (x * size + x_offset, y * size + y_offset, size, size), 1)
+            x = ((-x_offset + screen_dims[0] // 2) // size) * size + x_offset
+            y = ((-y_offset + screen_dims[1] // 2) // size) * size + y_offset
+            pygame.draw.line(screen, config.colors[2], (x, y), (x + size, y + size))
+            pygame.draw.line(screen, config.colors[2], (x + size, y), (x, y + size))
         if (insert or visual):
             if insert:
                 vx, vy = ix, iy

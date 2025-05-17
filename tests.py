@@ -13,5 +13,6 @@ cllaus.ups(10)
 cllaus.ups_show()
 cllaus.paste_vals(glider, 1, 1)
 cllaus.color_bg((20, 20, 20))
+cllaus.show_crosshair()
 
 cllaus.display()
