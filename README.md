@@ -36,3 +36,4 @@ Dalšími příklady CA jsou:
  - cleaning ui code
  - jupyter examples
  - docs
+ - asynchronous updates

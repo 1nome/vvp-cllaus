@@ -74,8 +74,6 @@ def ui(config: vizState):
 
     while running:
 
-        # centre of the creen coords
-
         def zoom(dir, cur_x, cur_y):
             """
             Updates cell size while keeping it above 0.
@@ -98,13 +96,14 @@ def ui(config: vizState):
         def clamp(a, max, min = 0):
             return min if a < min else (max if a > max else a)
         
+        # centre of the creen coords
         nx, ny = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2)
 
-        def check_bounds():
+        def check_bounds(x, y):
             """
-            Checks if nx, ny is inside the universe (false if so).
+            Checks if x, y are inside the universe (cell coords)
             """
-            return nx < 0 or nx >= universe.shape[0] or ny < 0 or ny >= universe.shape[1]
+            return 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]
 
         # event handling
         for event in pygame.event.get():
@@ -128,7 +127,7 @@ def ui(config: vizState):
                 if event.button == pygame.BUTTON_LEFT:
                     if lmb_down and not mouse_move:
                         x, y = arr_coords(event.pos[0], event.pos[1])
-                        if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
+                        if check_bounds(x, y):
                             visual = False
                             insert = True
                             ix, iy = x, y
@@ -193,7 +192,7 @@ def ui(config: vizState):
                 # increment
                 elif event.key == pygame.K_a:
                     if not (insert or visual):
-                        if check_bounds():
+                        if not check_bounds(nx, ny):
                             continue
                         ix, iy = nx, ny
                     if not visual:
@@ -209,7 +208,7 @@ def ui(config: vizState):
                 # yank
                 elif (event.key == pygame.K_y) or (event.key == pygame.K_c and event.mod & pygame.KMOD_CTRL):
                     if not (insert or visual):
-                        if check_bounds():
+                        if not check_bounds(nx, ny):
                             continue
                         ix, iy = nx, ny
                     if not visual:
@@ -219,7 +218,7 @@ def ui(config: vizState):
                 # clear (delete)
                 elif (event.key == pygame.K_d) or (event.key == pygame.K_x and event.mod & pygame.KMOD_CTRL):
                     if not (insert or visual):
-                        if check_bounds():
+                        if not check_bounds(nx, ny):
                             continue
                         ix, iy = nx, ny
                     if not visual:
@@ -277,17 +276,20 @@ def ui(config: vizState):
         screen.fill(config.colors[3])
 
         # rendering
+        # universe
         for x in range(base_offset_x, clamp(base_offset_x + visible_dims_x, universe.shape[0])):
             for y in range(base_offset_y, clamp(base_offset_y + visible_dims_y, universe.shape[1])):
                 if universe[x, y]:
                     pygame.draw.rect(screen, config.ca.colors[universe[x, y]],
                                     (x * size + x_offset, y * size + y_offset, size, size))
+        # border
         pygame.draw.rect(screen, config.colors[1], (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
         if crosshair:
-            x = ((-x_offset + screen_dims[0] // 2) // size) * size + x_offset
-            y = ((-y_offset + screen_dims[1] // 2) // size) * size + y_offset
+            x = nx * size + x_offset
+            y = ny * size + y_offset
             pygame.draw.line(screen, config.colors[2], (x, y), (x + size, y + size))
             pygame.draw.line(screen, config.colors[2], (x + size, y), (x, y + size))
+        # cursor(s)
         if (insert or visual):
             if insert:
                 vx, vy = ix, iy
