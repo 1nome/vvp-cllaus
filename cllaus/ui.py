@@ -40,6 +40,10 @@ def ui(config: vizState):
     crosshair = False
     visual = False
     insert = False
+    ix = 0
+    iy = 0
+    vx = 0
+    vy = 0
 
     class Long_avg:
         """
@@ -73,6 +77,20 @@ def ui(config: vizState):
             newsize = size + (1 if dir else (-1 if size > 1 else 0))
             return ((x_offset - cur_x) // size) * newsize + cur_x, ((y_offset - cur_y) // size) * newsize + cur_y, newsize
 
+        def arr_coords(cur_x, cur_y, clmp = False):
+            """
+            Translates from pixel coords to cell coords.
+            Can snap to edges.
+            """
+            x = (-x_offset + cur_x) // size
+            y = (-y_offset + cur_y) // size
+            if clmp:
+                return clamp(x, universe.shape[0] - 1), clamp(y, universe.shape[1] - 1)
+            return x, y
+        
+        def clamp(a, max, min = 0):
+            return min if a < min else (max if a > max else a)
+
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -89,8 +107,7 @@ def ui(config: vizState):
                 if event.button == pygame.BUTTON_LEFT:
                     if mouse_down and not mouse_move:
                         # toggle cell under cursor
-                        x = (-x_offset + event.pos[0]) // size
-                        y = (-y_offset + event.pos[1]) // size
+                        x, y = arr_coords(event.pos[0], event.pos[1])
                         if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
                             universe[x, y] = config.ca.next_vals[universe[x, y]]
                     mouse_down = False
@@ -114,18 +131,50 @@ def ui(config: vizState):
                     x_offset, y_offset, size = zoom(False, screen_dims[0] // 2, screen_dims[1] // 2)
                 # move
                 elif event.key in (pygame.K_h, pygame.K_LEFT):
-                    move_x += kb_move
+                    if insert:
+                        ix -= 1 if ix > 0 else 0
+                    elif visual:
+                        vx -= 1 if vx > 0 else 0
+                        pass
+                    else:
+                        move_x += kb_move
                 elif event.key in (pygame.K_j, pygame.K_DOWN):
-                    move_y -= kb_move
+                    if insert:
+                        iy += 1 if iy < universe.shape[1] - 1 else 0
+                    elif visual:
+                        vy += 1 if vy < universe.shape[1] - 1 else 0
+                        pass
+                    else:
+                        move_y -= kb_move
                 elif event.key in (pygame.K_k, pygame.K_UP):
-                    move_y += kb_move
+                    if insert:
+                        iy -= 1 if iy > 0 else 0
+                    elif visual:
+                        vy -= 1 if vy > 0 else 0
+                        pass
+                    else:
+                        move_y += kb_move
                 elif event.key in (pygame.K_l, pygame.K_RIGHT):
-                    move_x -= kb_move
-                elif event.key == pygame.K_a:
-                    crosshair = True
-                elif event.key == pygame.K_i and not visual:
+                    if insert:
+                        ix += 1 if ix < universe.shape[0] - 1 else 0
+                    elif visual:
+                        vx += 1 if vx < universe.shape[0] - 1 else 0
+                        pass
+                    else:
+                        move_x -= kb_move
+                # editing
+                elif event.key == pygame.K_a and (insert or visual):
+                    if insert:
+                        vx, vy = ix, iy
+                    universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1] =\
+                        config.ca.next_vals[universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]]
+                # modes
+                elif event.key == pygame.K_i and not (insert or visual):
                     insert = True
-                elif event.key == pygame.K_v and not insert:
+                    ix, iy = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2, True)
+                elif event.key == pygame.K_v and not (insert or visual):
+                    ix, iy = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2, True)
+                    vx, vy = ix, iy
                     visual = True
                 elif event.key == pygame.K_ESCAPE:
                     insert = False
@@ -133,20 +182,17 @@ def ui(config: vizState):
             elif event.type == pygame.KEYUP:
                 # move
                 if event.key in (pygame.K_h, pygame.K_LEFT):
-                    move_x -= kb_move
+                    if not (insert or visual):
+                        move_x -= kb_move
                 elif event.key in (pygame.K_j, pygame.K_DOWN):
-                    move_y += kb_move
+                    if not (insert or visual):
+                        move_y += kb_move
                 elif event.key in (pygame.K_k, pygame.K_UP):
-                    move_y -= kb_move
+                    if not (insert or visual):
+                        move_y -= kb_move
                 elif event.key in (pygame.K_l, pygame.K_RIGHT):
-                    move_x += kb_move
-                # modyfying the universe
-                elif event.key == pygame.K_a:
-                    x = (-x_offset + screen_dims[0] // 2) // size
-                    y = (-y_offset + screen_dims[1] // 2) // size
-                    if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
-                        universe[x, y] = config.ca.next_vals[universe[x, y]]
-                    crosshair = False
+                    if not (insert or visual):
+                        move_x += kb_move
 
         # keyboard move
         x_offset += int(move_x / fps_desired)
@@ -158,9 +204,6 @@ def ui(config: vizState):
             stats.append(f"fps: {fps():.0f}/{fps_desired:.0f}")
         if show_ups:
             stats.append(f"ups: {ups():.0f}/{ups_desired:.0f}")
-
-        def clamp(a, max):
-            return a if a < max else max
         
         # calculate the visible area offsets
         base_offset_x = (-x_offset if x_offset < 0 else 0) // size
@@ -182,6 +225,14 @@ def ui(config: vizState):
             x = (-x_offset + screen_dims[0] // 2) // size
             y = (-y_offset + screen_dims[1] // 2) // size
             pygame.draw.rect(screen, config.colors[2], (x * size + x_offset, y * size + y_offset, size, size), 1)
+        if (insert or visual):
+            if insert:
+                vx, vy = ix, iy
+            x = min(ix, vx)
+            y = min(iy, vy)
+            xs = (max(ix, vx) - x + 1) * size
+            ys = (max(iy, vy) - y + 1) * size
+            pygame.draw.rect(screen, config.colors[2], (x * size + x_offset, y * size + y_offset, xs, ys), 1)
         o = STATS_PAD_Y
         for s in stats:
             text = font.render(s, True, config.colors[0])

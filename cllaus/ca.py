@@ -5,7 +5,7 @@ from typing import List, Tuple, Literal
 class CA:
     def __init__(self):
         self.name = "My CA"
-        self.next_vals = {}
+        self.next_vals = np.array([])
         self.colors = {}
     def __call__(self, universe):
         pass
@@ -17,7 +17,7 @@ class NoRule(CA):
 class ConwayNaive(CA):
     def __init__(self):
         self.name = "Conway's game of life, naive implementation"
-        self.next_vals = {0: 1, 1: 0}
+        self.next_vals = np.array([1, 0], dtype=np.int8)
         self.colors = {1: "white"}
         self.relative_neighbours = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
