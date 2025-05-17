@@ -71,6 +71,14 @@ def ui(config: vizState):
     show_ups = config.show_ups
 
     last_op = ""
+    prev_op = last_op
+
+    # text pre-rendering
+    text_paused = font.render("PAUSED", True, config.colors[0])
+    text_visual = font.render("VISUAL", True, config.colors[0])
+    text_insert = font.render("INSERT", True, config.colors[0])
+    text_normal = font.render("NORMAL", True, config.colors[0])
+    text_last_op = font.render(last_op, True, config.colors[0])
 
     while running:
 
@@ -123,6 +131,10 @@ def ui(config: vizState):
                     ix, iy = arr_coords(event.pos[0], event.pos[1], True)
                     vx, vy = ix, iy
                     rmb_down = True
+                elif event.button == pygame.BUTTON_MIDDLE:
+                    x, y = arr_coords(event.pos[0], event.pos[1])
+                    if check_bounds(x, y):
+                        universe[x, y] = config.ca.next_vals[universe[x, y]]
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == pygame.BUTTON_LEFT:
                     if lmb_down and not mouse_move:
@@ -271,14 +283,23 @@ def ui(config: vizState):
         base_offset_y = (-y_offset if y_offset < 0 else 0) // size
         visible_dims_x = (screen_dims[0] // size + 1)
         visible_dims_y = (screen_dims[1] // size + 1)
+        end_x = clamp(base_offset_x + visible_dims_x, universe.shape[0])
+        end_y = clamp(base_offset_y + visible_dims_y, universe.shape[1])
 
         # clear image
         screen.fill(config.colors[3])
 
         # rendering
+        if config.grid:
+            for x in range(base_offset_x + 1, end_x):
+                pygame.draw.line(screen, config.colors[4], (x * size + x_offset, y_offset),
+                                 (x * size + x_offset, universe.shape[1] * size + y_offset - 1))
+            for y in range(base_offset_y + 1, end_y):
+                pygame.draw.line(screen, config.colors[4], (x_offset, y * size + y_offset),
+                                 (universe.shape[0] * size + x_offset - 1, y * size + y_offset))
         # universe
-        for x in range(base_offset_x, clamp(base_offset_x + visible_dims_x, universe.shape[0])):
-            for y in range(base_offset_y, clamp(base_offset_y + visible_dims_y, universe.shape[1])):
+        for x in range(base_offset_x, end_x):
+            for y in range(base_offset_y, end_y):
                 if universe[x, y]:
                     pygame.draw.rect(screen, config.ca.colors[universe[x, y]],
                                     (x * size + x_offset, y * size + y_offset, size, size))
@@ -305,14 +326,20 @@ def ui(config: vizState):
             rect.topleft = (screen_dims[0] - STATS_OFFSET_X, o)
             screen.blit(text, rect)
             o += FONT_SIZE
-        text = font.render("VISUAL" if visual else "INSERT" if insert else "NORMAL", True, config.colors[0])
+        text = text_visual if visual else text_insert if insert else text_normal
         rect = text.get_rect()
         rect.bottomleft = (MODE_OFFSET, screen_dims[1])
         screen.blit(text, rect)
-        text = font.render(last_op, True, config.colors[0])
-        rect = text.get_rect()
+        if last_op is not prev_op:
+            text_last_op = font.render(last_op, True, config.colors[0])
+            prev_op = last_op
+        rect = text_last_op.get_rect()
         rect.bottomleft = (LAST_OP_OFFSET, screen_dims[1])
-        screen.blit(text, rect)
+        screen.blit(text_last_op, rect)
+        if paused:
+            rect = text_paused.get_rect()
+            rect.topleft = (MODE_OFFSET, 0)
+            screen.blit(text_paused, rect)
         
         # updating CA
         if time_since_last_update > (1 / ups_desired):

@@ -16,8 +16,9 @@ class vizState:
         self.show_fps = False
         self.show_ups = False
         self.paused = False
-        self.colors: List[Tuple[int, int, int] | str] = ["white", "red", "yellow", "black"]
+        self.colors: List[Tuple[int, int, int] | str] = ["white", "red", "yellow", "black", (40, 40, 40)]
         self.crosshair = False
+        self.grid = False
         
     def reset(self):
         self.__init__()
@@ -103,8 +104,17 @@ def color_cursor(color: Tuple[int, int, int] | str):
 def color_border(color: Tuple[int, int, int] | str):
     _config.colors[1] = color
 
+def color_grid(color: Tuple[int, int, int] | str):
+    _config.colors[4] = color
+
 def show_crosshair():
     _config.crosshair = True
 
 def hide_crosshair():
     _config.crosshair = False
+
+def show_grid():
+    _config.grid = True
+
+def hide_grid():
+    _config.grid = False
