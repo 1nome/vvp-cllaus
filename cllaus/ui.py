@@ -1,12 +1,13 @@
 import pygame
 import numpy as np
-from .core import vizState, clear
+from .core import vizState, clear, paste_vals
 
 FONT_SIZE = 32
 STATS_OFFSET_X = 250
 STATS_PAD_Y = 5
 AVG_OVER = 64
 MODE_OFFSET = 5
+LAST_OP_OFFSET = 200
 
 def ui(config: vizState):
 
@@ -32,7 +33,8 @@ def ui(config: vizState):
     time_since_last_update = 0
     dt = clock.tick(fps_desired) / 1000 + 0e-6
 
-    mouse_down = False
+    lmb_down = False
+    rmb_down = False
     mouse_move = False
     paused = config.paused
     move_x = 0
@@ -68,6 +70,8 @@ def ui(config: vizState):
     show_fps = config.show_fps
     show_ups = config.show_ups
 
+    last_op = ""
+
     while running:
 
         # centre of the creen coords
@@ -96,6 +100,12 @@ def ui(config: vizState):
         
         nx, ny = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2)
 
+        def check_bounds():
+            """
+            Checks if nx, ny is inside the universe (false if so).
+            """
+            return nx < 0 or nx >= universe.shape[0] or ny < 0 or ny >= universe.shape[1]
+
         # event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -103,25 +113,37 @@ def ui(config: vizState):
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_LEFT:
-                    mouse_down = True
+                    lmb_down = True
                 elif event.button == pygame.BUTTON_WHEELDOWN:
                     x_offset, y_offset, size = zoom(False, event.pos[0], event.pos[1])
                 elif event.button == pygame.BUTTON_WHEELUP:
                     x_offset, y_offset, size = zoom(True, event.pos[0], event.pos[1])
+                elif event.button == pygame.BUTTON_RIGHT:
+                    insert = False
+                    visual = True
+                    ix, iy = arr_coords(event.pos[0], event.pos[1], True)
+                    vx, vy = ix, iy
+                    rmb_down = True
             elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == pygame.BUTTON_LEFT:
-                    if mouse_down and not mouse_move:
-                        # toggle cell under cursor
+                    if lmb_down and not mouse_move:
                         x, y = arr_coords(event.pos[0], event.pos[1])
                         if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
-                            universe[x, y] = config.ca.next_vals[universe[x, y]]
-                    mouse_down = False
+                            visual = False
+                            insert = True
+                            ix, iy = x, y
+                    lmb_down = False
                     mouse_move = False
+                elif event.button == pygame.BUTTON_RIGHT:
+                    rmb_down = False
             elif event.type == pygame.MOUSEMOTION:
-                if mouse_down:
+                if lmb_down:
                     mouse_move = True
                     x_offset += event.rel[0]
                     y_offset += event.rel[1]
+                elif rmb_down:
+                    vx, vy = arr_coords(event.pos[0], event.pos[1], True)
+
             elif event.type == pygame.KEYDOWN:
                 #pause
                 if event.key == pygame.K_SPACE:
@@ -168,32 +190,43 @@ def ui(config: vizState):
                     else:
                         move_x -= kb_move
                 # editing
+                # increment
                 elif event.key == pygame.K_a:
                     if not (insert or visual):
+                        if check_bounds():
+                            continue
                         ix, iy = nx, ny
                     if not visual:
                         vx, vy = ix, iy
                     universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1] =\
                         config.ca.next_vals[universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]]
+                # paste
                 elif (event.key == pygame.K_p) or (event.key == pygame.K_v and event.mod & pygame.KMOD_CTRL):
-                    x = ix if insert else vx if visual else clamp(nx, universe.shape[0])
-                    y = iy if insert else vy if visual else clamp(ny, universe.shape[1])
-                    sx = clamp(x + reg.shape[0], universe.shape[0]) - x
-                    sy = clamp(y + reg.shape[1], universe.shape[1]) - y
-                    universe[x:x + sx, y:y + sy] = reg[0:sx, 0:sy]
+                    x = ix if insert else vx if visual else nx
+                    y = iy if insert else vy if visual else ny
+                    s = paste_vals(reg, x, y)
+                    last_op = f"Overwritten {s} cells"
+                # yank
                 elif (event.key == pygame.K_y) or (event.key == pygame.K_c and event.mod & pygame.KMOD_CTRL):
                     if not (insert or visual):
+                        if check_bounds():
+                            continue
                         ix, iy = nx, ny
                     if not visual:
                         vx, vy = ix, iy
                     reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]
+                    last_op = f"Yanked {reg.size} cells"
+                # clear (delete)
                 elif (event.key == pygame.K_d) or (event.key == pygame.K_x and event.mod & pygame.KMOD_CTRL):
                     if not (insert or visual):
+                        if check_bounds():
+                            continue
                         ix, iy = nx, ny
                     if not visual:
                         vx, vy = ix, iy
                     reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]
                     universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1].fill(0)
+                    last_op = f"Cleared {reg.size} cells"
                 # modes
                 elif event.key == pygame.K_i and not (insert or visual):
                     insert = True
@@ -273,6 +306,10 @@ def ui(config: vizState):
         text = font.render("VISUAL" if visual else "INSERT" if insert else "NORMAL", True, config.colors[0])
         rect = text.get_rect()
         rect.bottomleft = (MODE_OFFSET, screen_dims[1])
+        screen.blit(text, rect)
+        text = font.render(last_op, True, config.colors[0])
+        rect = text.get_rect()
+        rect.bottomleft = (LAST_OP_OFFSET, screen_dims[1])
         screen.blit(text, rect)
         
         # updating CA

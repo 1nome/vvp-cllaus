@@ -64,19 +64,20 @@ def fps_hide():
 def ups_hide():
     _config.show_ups = False
 
-def paste_vals(arr: NDArray, x: int, y: int):
+def paste_vals(arr: NDArray, x: int, y: int) -> int:
     src_x = 0 if x > 0 else -x
     src_y = 0 if y > 0 else -y
     if src_x > arr.shape[0] or src_y > arr.shape[1]:
-        return
+        return 0
     dest_x = x if x > 0 else 0
     dest_y = y if y > 0 else 0
     if dest_x > _config.universe.shape[0] or dest_y > _config.universe.shape[0]:
-        return
+        return 0
     size_x = min(arr.shape[0] - src_x, _config.universe.shape[0] - dest_x)
     size_y = min(arr.shape[1] - src_y, _config.universe.shape[1] - dest_y)
     _config.universe[dest_x:dest_x + size_x, dest_y:dest_y + size_y] =\
         arr[src_x:src_x + size_x, src_y:src_y + size_y]
+    return size_x * size_y
 
 def pause():
     _config.paused = True
