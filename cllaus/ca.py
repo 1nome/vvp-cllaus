@@ -5,7 +5,7 @@ from typing import List, Tuple, Literal
 class CA:
     def __init__(self):
         self.name = "My CA"
-        self.vals = {}
+        self.next_vals = {}
         self.colors = {}
     def __call__(self, universe):
         pass

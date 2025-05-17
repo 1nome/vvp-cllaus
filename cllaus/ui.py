@@ -1,20 +1,21 @@
 import pygame
 import numpy as np
-from .core import vizState
+from .core import vizState, clear
 
 FONT_SIZE = 32
 STATS_OFFSET_X = 250
 STATS_PAD_Y = 5
 AVG_OVER = 64
+MODE_OFFSET = 5
 
 def ui(config: vizState):
 
     universe = config.universe
 
-    screen_dims = config.screen_dims
+    screen_dims = [config.screen_dims[0], config.screen_dims[1]]
 
     pygame.init()
-    screen = pygame.display.set_mode(screen_dims)
+    screen = pygame.display.set_mode(screen_dims, pygame.RESIZABLE)
     pygame.display.set_caption("cllaus | displaying " + config.ca.name)
     clock = pygame.time.Clock()
     running = True
@@ -37,6 +38,8 @@ def ui(config: vizState):
     move_x = 0
     move_y = 0
     crosshair = False
+    visual = False
+    insert = False
 
     class Long_avg:
         """
@@ -89,7 +92,7 @@ def ui(config: vizState):
                         x = (-x_offset + event.pos[0]) // size
                         y = (-y_offset + event.pos[1]) // size
                         if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
-                            universe[x, y] = config.ca.vals[universe[x, y]]
+                            universe[x, y] = config.ca.next_vals[universe[x, y]]
                     mouse_down = False
                     mouse_move = False
             elif event.type == pygame.MOUSEMOTION:
@@ -103,39 +106,46 @@ def ui(config: vizState):
                     paused = not paused
                 # restart
                 elif event.key == pygame.K_r:
-                    universe = np.zeros_like(universe)
+                    clear()
                 # zoom
                 elif event.key in (pygame.K_EQUALS, pygame.K_KP_PLUS):
                     x_offset, y_offset, size = zoom(True, screen_dims[0] // 2, screen_dims[1] // 2)
                 elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
                     x_offset, y_offset, size = zoom(False, screen_dims[0] // 2, screen_dims[1] // 2)
                 # move
-                elif event.key == pygame.K_h:
+                elif event.key in (pygame.K_h, pygame.K_LEFT):
                     move_x += kb_move
-                elif event.key == pygame.K_j:
+                elif event.key in (pygame.K_j, pygame.K_DOWN):
                     move_y -= kb_move
-                elif event.key == pygame.K_k:
+                elif event.key in (pygame.K_k, pygame.K_UP):
                     move_y += kb_move
-                elif event.key == pygame.K_l:
+                elif event.key in (pygame.K_l, pygame.K_RIGHT):
                     move_x -= kb_move
                 elif event.key == pygame.K_a:
                     crosshair = True
+                elif event.key == pygame.K_i and not visual:
+                    insert = True
+                elif event.key == pygame.K_v and not insert:
+                    visual = True
+                elif event.key == pygame.K_ESCAPE:
+                    insert = False
+                    visual = False
             elif event.type == pygame.KEYUP:
                 # move
-                if event.key == pygame.K_h:
+                if event.key in (pygame.K_h, pygame.K_LEFT):
                     move_x -= kb_move
-                elif event.key == pygame.K_j:
+                elif event.key in (pygame.K_j, pygame.K_DOWN):
                     move_y += kb_move
-                elif event.key == pygame.K_k:
+                elif event.key in (pygame.K_k, pygame.K_UP):
                     move_y -= kb_move
-                elif event.key == pygame.K_l:
+                elif event.key in (pygame.K_l, pygame.K_RIGHT):
                     move_x += kb_move
                 # modyfying the universe
                 elif event.key == pygame.K_a:
                     x = (-x_offset + screen_dims[0] // 2) // size
                     y = (-y_offset + screen_dims[1] // 2) // size
                     if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
-                        universe[x, y] = config.ca.vals[universe[x, y]]
+                        universe[x, y] = config.ca.next_vals[universe[x, y]]
                     crosshair = False
 
         # keyboard move
@@ -179,6 +189,10 @@ def ui(config: vizState):
             rect.topleft = (screen_dims[0] - STATS_OFFSET_X, o)
             screen.blit(text, rect)
             o += FONT_SIZE
+        text = font.render("VISUAL" if visual else "INSERT" if insert else "NORMAL", True, config.colors[0])
+        rect = text.get_rect()
+        rect.bottomleft = (MODE_OFFSET, screen_dims[1])
+        screen.blit(text, rect)
         
         # updating CA
         if time_since_last_update > (1 / ups_desired):
@@ -188,6 +202,10 @@ def ui(config: vizState):
 
         # presenting image
         pygame.display.flip()
+
+        # record window size changes
+        screen_dims[0] = screen.get_width()
+        screen_dims[1] = screen.get_height()
 
         # time step
         # too bad now:

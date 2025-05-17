@@ -5,7 +5,7 @@ from .ca import CA, NoRule
 
 class vizState:
     def __init__(self):
-        self.screen_dims = [1280, 720]
+        self.screen_dims: Tuple[int, int] = (1280, 720)
         self.cell_size = 20
         self.ca: CA = NoRule()
         self.universe = np.zeros((100, 100), dtype=np.int8)
@@ -30,19 +30,15 @@ def display():
 def rule(ca: CA):
     _config.ca = ca
 
-def window_dims(dims: List[int]):
-    if len(dims) != 2:
-        raise ValueError("Expected a list of len 2")
-    _config.screen_dims[:] = dims[:]
+def window_dims(dims: Tuple[int, int]):
+    _config.screen_dims = dims
 
 def cell_size(size: int):
     if size < 1:
         raise ValueError("Expected a value >= 1")
     _config.cell_size = size
 
-def universe_dims(dims: List[int]):
-    if len(dims) != 2:
-        raise ValueError("Expected a list of len 2")
+def universe_dims(dims: Tuple[int, int]):
     _config.universe.resize(dims)
 
 def fps(fps: int | float):
