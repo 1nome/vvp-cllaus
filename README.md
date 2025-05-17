@@ -1,6 +1,8 @@
-# Cellular automata simulator
+# Cellular automata ~~simulator~~ visualiser
 
 ## Textový popis
+
+Projekt do VVP
 
 Cílem projektu je simulovat celulární automaty (zkratka CA), a následně je vykreslit. CA je dynamický systém, diskrétní v hodnotách, prostoru i čase. Ku příkladu [Conwayova hra života](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) je tvořena 2d = čtvercovou mřížkou buněk, které každé můžou mít hodnotu 0 nebo 1 (mrtvá nebo živá). Tyto hodnoty se mění podle předem daných pravidel každý časový krok (= generaci).
 
@@ -22,3 +24,15 @@ Dalšími příklady CA jsou:
    - Zrychlení / zpomalení / pauza simulace
  - Výpis statistik (např. populace)
  - Uložení / načtení stavu (celý / výběr)
+
+## Todo:
+
+ - implement langton's ant
+ - add optimized conway
+ - universe expansion
+ - ups changing
+ - population, generation stats
+ - save, load
+ - cleaning ui code
+ - jupyter examples
+ - docs
