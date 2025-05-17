@@ -3,7 +3,7 @@ import numpy as np
 from .core import vizState, clear, paste_vals
 
 FONT_SIZE = 32
-STATS_OFFSET_X = 250
+STATS_OFFSET_X = 300
 STATS_PAD_Y = 5
 AVG_OVER = 64
 MODE_OFFSET = 5
@@ -69,6 +69,8 @@ def ui(config: vizState):
 
     show_fps = config.show_fps
     show_ups = config.show_ups
+    show_generation = config.show_generation
+    show_population = config.show_population
 
     last_op = ""
     prev_op = last_op
@@ -79,6 +81,8 @@ def ui(config: vizState):
     text_insert = font.render("INSERT", True, config.colors[0])
     text_normal = font.render("NORMAL", True, config.colors[0])
     text_last_op = font.render(last_op, True, config.colors[0])
+
+    generation = 0
 
     while running:
 
@@ -202,7 +206,7 @@ def ui(config: vizState):
                         move_x -= kb_move
                 # editing
                 # increment
-                elif event.key == pygame.K_a:
+                elif event.key == pygame.K_a and not event.mod & pygame.KMOD_CTRL:
                     if not (insert or visual):
                         if not check_bounds(nx, ny):
                             continue
@@ -241,17 +245,21 @@ def ui(config: vizState):
                 # modes
                 elif event.key == pygame.K_i and not (insert or visual):
                     insert = True
-                    crosshair = False
                     ix, iy = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2, True)
                 elif event.key == pygame.K_v and not (insert or visual):
                     ix, iy = arr_coords(screen_dims[0] // 2, screen_dims[1] // 2, True)
                     vx, vy = ix, iy
                     visual = True
-                    crosshair = False
                 elif event.key == pygame.K_ESCAPE:
                     insert = False
                     visual = False
-                    crosshair = True if config.crosshair else False
+                # various
+                elif (event.key == pygame.K_a and event.mod & pygame.KMOD_CTRL):
+                    insert = False
+                    visual = True
+                    ix, iy = 0, 0
+                    vx, vy = universe.shape[0] - 1, universe.shape[1] - 1
+
             elif event.type == pygame.KEYUP:
                 # move
                 if event.key in (pygame.K_h, pygame.K_LEFT):
@@ -277,6 +285,10 @@ def ui(config: vizState):
             stats.append(f"fps: {fps():.0f}/{fps_desired:.0f}")
         if show_ups:
             stats.append(f"ups: {ups():.0f}/{ups_desired:.0f}")
+        if show_generation:
+            stats.append(f"generation #{generation}")
+        if show_population:
+            stats.append(f"population: {np.count_nonzero(universe)}")
         
         # calculate the visible area offsets
         base_offset_x = (-x_offset if x_offset < 0 else 0) // size
@@ -305,7 +317,7 @@ def ui(config: vizState):
                                     (x * size + x_offset, y * size + y_offset, size, size))
         # border
         pygame.draw.rect(screen, config.colors[1], (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
-        if crosshair:
+        if crosshair and not (insert or visual):
             x = nx * size + x_offset
             y = ny * size + y_offset
             pygame.draw.line(screen, config.colors[2], (x, y), (x + size, y + size))
@@ -345,6 +357,7 @@ def ui(config: vizState):
         if time_since_last_update > (1 / ups_desired):
             ups_s = 1 / time_since_last_update
             config.ca(universe)
+            generation += 1
             time_since_last_update = 0
 
         # presenting image

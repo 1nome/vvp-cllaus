@@ -19,6 +19,8 @@ class vizState:
         self.colors: List[Tuple[int, int, int] | str] = ["white", "red", "yellow", "black", (40, 40, 40)]
         self.crosshair = False
         self.grid = False
+        self.show_generation = True
+        self.show_population = True
         
     def reset(self):
         self.__init__()
@@ -92,29 +94,41 @@ def reset():
 def clear():
     _config.universe.fill(0)
 
-def color_bg(color: Tuple[int, int, int] | str):
+def bg_color(color: Tuple[int, int, int] | str):
     _config.colors[3] = color
 
-def color_text(color: Tuple[int, int, int] | str):
+def text_color(color: Tuple[int, int, int] | str):
     _config.colors[0] = color
 
-def color_cursor(color: Tuple[int, int, int] | str):
+def cursor_color(color: Tuple[int, int, int] | str):
     _config.colors[2] = color
 
-def color_border(color: Tuple[int, int, int] | str):
+def border_color(color: Tuple[int, int, int] | str):
     _config.colors[1] = color
 
-def color_grid(color: Tuple[int, int, int] | str):
+def grid_color(color: Tuple[int, int, int] | str):
     _config.colors[4] = color
 
-def show_crosshair():
+def crosshair_show():
     _config.crosshair = True
 
-def hide_crosshair():
+def crosshair_hide():
     _config.crosshair = False
 
-def show_grid():
+def generation_show():
+    _config.show_generation = True
+
+def generation_hide():
+    _config.show_generation = False
+
+def population_show():
+    _config.show_population = True
+
+def population_hide():
+    _config.show_population = False
+
+def grid_show():
     _config.grid = True
 
-def hide_grid():
+def grid_hide():
     _config.grid = False

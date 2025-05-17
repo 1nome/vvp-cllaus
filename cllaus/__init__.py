@@ -1,8 +1,9 @@
-from .core import display, rule, cell_size, window_dims, universe_dims, fps, ups, ups_show, fps_show, paste_vals, pause, unpause, ups_hide, fps_hide, reset, clear, color_bg, color_border, color_cursor, color_text, hide_crosshair, show_crosshair, color_grid, hide_grid, show_grid
+from .core import display, rule, cell_size, window_dims, universe_dims, fps, ups, ups_show, fps_show, paste_vals, pause, unpause, ups_hide, fps_hide, reset, clear, bg_color, border_color, cursor_color, text_color, crosshair_hide, crosshair_show, grid_color, grid_hide, grid_show, generation_hide, generation_show, population_hide, population_show
 from .ca import ConwayNaive, NoRule, CA
 
 __all__ = ['display', 'rule', 'cell_size', 'window_dims', 'universe_dims',
            'ConwayNaive', 'NoRule', 'CA', 'fps', 'ups', 'ups_show', 'fps_show',
            'paste_vals', 'pause', 'unpause', 'ups_hide', 'fps_hide', 'reset',
-           'clear', 'color_bg', 'color_border', 'color_cursor', 'color_text',
-           'hide_crosshair', 'show_crosshair', 'color_grid', 'hide_grid', 'show_grid']
+           'clear', 'bg_color', 'border_color', 'cursor_color', 'text_color',
+           'crosshair_hide', 'crosshair_show', 'grid_color', 'grid_hide', 'grid_show',
+           'generation_hide', 'generation_show', 'population_hide', 'population_show']

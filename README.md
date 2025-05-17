@@ -37,3 +37,4 @@ Dalšími příklady CA jsou:
  - jupyter examples
  - docs
  - asynchronous updates
+ - repeating keys
