@@ -75,67 +75,67 @@ def ui(config: vizState):
             if event.type == pygame.QUIT:
                 # stops the loop (thus pygame)
                 running = False
-            if event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_LEFT:
                     mouse_down = True
-                if event.button == pygame.BUTTON_WHEELDOWN:
+                elif event.button == pygame.BUTTON_WHEELDOWN:
                     x_offset, y_offset, size = zoom(False, event.pos[0], event.pos[1])
-                if event.button == pygame.BUTTON_WHEELUP:
+                elif event.button == pygame.BUTTON_WHEELUP:
                     x_offset, y_offset, size = zoom(True, event.pos[0], event.pos[1])
-            if event.type == pygame.MOUSEBUTTONUP:
+            elif event.type == pygame.MOUSEBUTTONUP:
                 if event.button == pygame.BUTTON_LEFT:
                     if mouse_down and not mouse_move:
                         # toggle cell under cursor
                         x = (-x_offset + event.pos[0]) // size
                         y = (-y_offset + event.pos[1]) // size
                         if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
-                            universe[x, y] = not universe[x, y]
+                            universe[x, y] = config.ca.vals[universe[x, y]]
                     mouse_down = False
                     mouse_move = False
-            if event.type == pygame.MOUSEMOTION:
+            elif event.type == pygame.MOUSEMOTION:
                 if mouse_down:
                     mouse_move = True
                     x_offset += event.rel[0]
                     y_offset += event.rel[1]
-            if event.type == pygame.KEYDOWN:
+            elif event.type == pygame.KEYDOWN:
                 #pause
                 if event.key == pygame.K_SPACE:
                     paused = not paused
                 # restart
-                if event.key == pygame.K_r:
+                elif event.key == pygame.K_r:
                     universe = np.zeros_like(universe)
                 # zoom
-                if event.key in (pygame.K_EQUALS, pygame.K_KP_PLUS):
+                elif event.key in (pygame.K_EQUALS, pygame.K_KP_PLUS):
                     x_offset, y_offset, size = zoom(True, screen_dims[0] // 2, screen_dims[1] // 2)
-                if event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
+                elif event.key in (pygame.K_MINUS, pygame.K_KP_MINUS):
                     x_offset, y_offset, size = zoom(False, screen_dims[0] // 2, screen_dims[1] // 2)
                 # move
-                if event.key == pygame.K_h:
+                elif event.key == pygame.K_h:
                     move_x += kb_move
-                if event.key == pygame.K_j:
+                elif event.key == pygame.K_j:
                     move_y -= kb_move
-                if event.key == pygame.K_k:
+                elif event.key == pygame.K_k:
                     move_y += kb_move
-                if event.key == pygame.K_l:
+                elif event.key == pygame.K_l:
                     move_x -= kb_move
-                if event.key == pygame.K_i:
+                elif event.key == pygame.K_a:
                     crosshair = True
-            if event.type == pygame.KEYUP:
+            elif event.type == pygame.KEYUP:
                 # move
                 if event.key == pygame.K_h:
                     move_x -= kb_move
-                if event.key == pygame.K_j:
+                elif event.key == pygame.K_j:
                     move_y += kb_move
-                if event.key == pygame.K_k:
+                elif event.key == pygame.K_k:
                     move_y -= kb_move
-                if event.key == pygame.K_l:
+                elif event.key == pygame.K_l:
                     move_x += kb_move
                 # modyfying the universe
-                if event.key == pygame.K_i:
+                elif event.key == pygame.K_a:
                     x = (-x_offset + screen_dims[0] // 2) // size
                     y = (-y_offset + screen_dims[1] // 2) // size
                     if 0 <= x < universe.shape[0] and 0 <= y < universe.shape[1]:
-                        universe[x, y] = not universe[x, y]
+                        universe[x, y] = config.ca.vals[universe[x, y]]
                     crosshair = False
 
         # keyboard move
@@ -159,22 +159,22 @@ def ui(config: vizState):
         visible_dims_y = (screen_dims[1] // size + 1)
 
         # clear image
-        screen.fill("black")
+        screen.fill(config.colors[3])
 
         # rendering
         for x in range(base_offset_x, clamp(base_offset_x + visible_dims_x, universe.shape[0])):
             for y in range(base_offset_y, clamp(base_offset_y + visible_dims_y, universe.shape[1])):
                 if universe[x, y]:
-                    pygame.draw.rect(screen, "white",
+                    pygame.draw.rect(screen, config.ca.colors[universe[x, y]],
                                     (x * size + x_offset, y * size + y_offset, size, size))
-        pygame.draw.rect(screen, "red", (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
+        pygame.draw.rect(screen, config.colors[1], (x_offset, y_offset, universe.shape[0] * size, universe.shape[1] * size), 1)
         if crosshair:
             x = (-x_offset + screen_dims[0] // 2) // size
             y = (-y_offset + screen_dims[1] // 2) // size
-            pygame.draw.rect(screen, "red", (x * size + x_offset, y * size + y_offset, size, size), 1)
+            pygame.draw.rect(screen, config.colors[2], (x * size + x_offset, y * size + y_offset, size, size), 1)
         o = STATS_PAD_Y
         for s in stats:
-            text = font.render(s, True, "white")
+            text = font.render(s, True, config.colors[0])
             rect = text.get_rect()
             rect.topleft = (screen_dims[0] - STATS_OFFSET_X, o)
             screen.blit(text, rect)

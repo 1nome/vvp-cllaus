@@ -12,19 +12,6 @@ cllaus.fps(180)
 cllaus.ups(10)
 cllaus.ups_show()
 cllaus.paste_vals(glider, 1, 1)
-# cllaus.pause()
-
-# arrs = [np.ones((50, 50), dtype=np.int8),
-#         np.ones((100, 100), dtype=np.int8),
-#         np.ones((150, 150), dtype=np.int8)]
-
-# os = [-1.5, -1, -0.5, 0, 0.5, 1, 1.5]
-
-# for a in arrs:
-#     for x in os:
-#         for y in os:
-#             cllaus.paste_vals(a, int(a.shape[0] * x), int(a.shape[1] * y))
-#             cllaus.display()
-#             cllaus.clear()
+cllaus.color_bg((20, 20, 20))
 
 cllaus.display()

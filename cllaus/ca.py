@@ -5,6 +5,8 @@ from typing import List, Tuple, Literal
 class CA:
     def __init__(self):
         self.name = "My CA"
+        self.vals = {}
+        self.colors = {}
     def __call__(self, universe):
         pass
 
@@ -15,6 +17,8 @@ class NoRule(CA):
 class ConwayNaive(CA):
     def __init__(self):
         self.name = "Conway's game of life, naive implementation"
+        self.next_vals = {0: 1, 1: 0}
+        self.colors = {1: "white"}
         self.relative_neighbours = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
     
@@ -33,6 +37,6 @@ class ConwayNaive(CA):
         for i in range(1, universe.shape[0] - 1):
             for j in range(1, universe.shape[1] - 1):
                 if (self.n_neighbours[i, j] < 2 or self.n_neighbours[i, j] > 3) and universe[i, j]:
-                    universe[i, j] = np.False_
+                    universe[i, j] = 0
                 elif self.n_neighbours[i, j] == 3 and not universe[i, j]:
-                    universe[i, j] = np.True_
+                    universe[i, j] = 1

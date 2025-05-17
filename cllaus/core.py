@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 from .ca import CA, NoRule
@@ -16,6 +16,7 @@ class vizState:
         self.show_fps = False
         self.show_ups = False
         self.paused = False
+        self.colors: List[Tuple[int, int, int] | str] = ["white", "red", "yellow", "black"]
         
     def reset(self):
         self.__init__()
@@ -91,3 +92,15 @@ def reset():
 
 def clear():
     _config.universe.fill(0)
+
+def color_bg(color: Tuple[int, int, int] | str):
+    _config.colors[3] = color
+
+def color_text(color: Tuple[int, int, int] | str):
+    _config.colors[0] = color
+
+def color_cursor(color: Tuple[int, int, int] | str):
+    _config.colors[2] = color
+
+def color_border(color: Tuple[int, int, int] | str):
+    _config.colors[1] = color
