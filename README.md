@@ -29,8 +29,6 @@ Dalšími příklady CA jsou:
 
  - add optimized conway
  - universe expansion
- - ups changing
- - save, load
  - cleaning ui code
  - jupyter examples
  - docs

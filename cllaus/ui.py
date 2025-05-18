@@ -315,6 +315,15 @@ def ui(config: vizState):
                     visual = True
                     ix, iy = 0, 0
                     vx, vy = universe.shape[0] - 1, universe.shape[1] - 1
+                # changing ups
+                elif (event.key == pygame.K_1 and not event.mod & pygame.KMOD_SHIFT):
+                    ups_desired += 1
+                elif (event.key == pygame.K_1 and event.mod & pygame.KMOD_SHIFT):
+                    ups_desired -= 1 if ups_desired > 1 else 0
+                elif (event.key == pygame.K_2 and not event.mod & pygame.KMOD_SHIFT):
+                    ups_desired += 10
+                elif (event.key == pygame.K_2 and event.mod & pygame.KMOD_SHIFT):
+                    ups_desired -= 10 if ups_desired > 10 else (ups_desired - 1)
 
             elif event.type == pygame.KEYUP:
                 # move
