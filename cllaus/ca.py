@@ -4,6 +4,9 @@ from typing import List, Tuple, Literal
 import numba
 
 class CA:
+    """
+    Base class all cellular automatas to be derived from.
+    """
     def __init__(self):
         self.name: str
         self.next_vals: NDArray
@@ -13,6 +16,9 @@ class CA:
         pass
 
 class NoRule(CA):
+    """
+    Does nothing. That's it.
+    """
     def __init__(self):
         self.name = "Nothing"
         self.next_vals = np.array([0], dtype = np.int8)
@@ -20,6 +26,9 @@ class NoRule(CA):
         self.dtype = np.int8
 
 class ConwayNaive(CA):
+    """
+    Conway's game of life, python implementation.
+    """
     def __init__(self):
         self.name = "Conway's game of life, naive implementation"
         self.next_vals = np.array([1, 0], dtype=np.int8)
@@ -64,6 +73,9 @@ def conway_numba(n_neighbours, universe):
                 universe[i, j] = 1
 
 class ConwayNaiveNumba(CA):
+    """
+    Conway's game of life, numba implementation.
+    """
     def __init__(self):
         self.name = "Conway's game of life, jit naive implementation"
         self.next_vals = np.array([1, 0], dtype=np.int8)
@@ -86,6 +98,9 @@ def conway_kernel(neighbours):
     return kernel1(neighbours)
 
 class ConwayStencil(CA):
+    """
+    Conway's game of life, numba stencil implementation.
+    """
     def __init__(self):
         self.name = "Conway's game of life, numba stencil implementation"
         self.next_vals = np.array([1, 0], dtype=np.int8)
@@ -101,6 +116,9 @@ class ConwayStencil(CA):
         universe |= (self.n_neighbours == 3)
 
 class ConwayNumpy(CA):
+    """
+    Conway's game of life, numpy implementation.
+    """
     def __init__(self):
         self.name = "Conway's game of life, numpy implementation"
         self.next_vals = np.array([1, 0], dtype=np.int8)
@@ -124,6 +142,9 @@ class ConwayNumpy(CA):
         universe |= (self.n_neighbours == 3)
 
 class LangtonsAnt(CA):
+    """
+    Langton's ant, ants' rotation are stored in-universe, allowing for multiple ants.
+    """
     def __init__(self):
         self.name = "Langton's ant"
         self.next_vals = np.array([1, 8, 0, 0, 0, 0, 0, 0,
