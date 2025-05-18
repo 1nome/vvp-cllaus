@@ -29,6 +29,5 @@ Dalšími příklady CA jsou:
 
  - universe expansion
  - cleaning ui code
- - docs
  - asynchronous updates
  - repeating keys
