@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
 from .core import vizState, clear, paste_vals
+from .io import save_to, load_from
 
 FONT_SIZE = 32
 STATS_OFFSET_X = 300
@@ -47,6 +48,11 @@ def ui(config: vizState):
     vx = 0
     vy = 0
     reg = np.array([[0]], dtype=universe.dtype)
+    save = False
+    load = False
+    textbox = ""
+    load_text = False
+    was_paused = False
 
     class Long_avg:
         """
@@ -74,6 +80,7 @@ def ui(config: vizState):
 
     last_op = ""
     prev_op = last_op
+    op = ""
 
     # text pre-rendering
     text_paused = font.render("PAUSED", True, config.colors[0])
@@ -120,6 +127,37 @@ def ui(config: vizState):
             if event.type == pygame.QUIT:
                 # stops the loop (thus pygame)
                 running = False
+            # text window override
+            if load_text:
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_BACKSPACE:
+                        textbox = textbox[:-1]
+                        last_op = op + textbox
+                    elif event.key == pygame.K_ESCAPE:
+                        save = False
+                        load = False
+                        load_text = False
+                        paused = was_paused
+                        last_op = ""
+                        textbox = ""
+                    elif event.key == pygame.K_RETURN:
+                        last_op = ""
+                        if save and len(textbox):
+                            save = False
+                            if save_to(textbox, universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]):
+                                last_op = f"Written {(-min(ix, vx) +max(ix, vx) + 1) * (-min(iy, vy) + max(iy, vy) + 1)} cells to {textbox}"
+                            else:
+                                last_op = f"Failed to write to {textbox}"
+                        elif load and len(textbox):
+                            load = False
+                            reg = load_from(textbox, universe.dtype)
+                            last_op = f"Loaded {reg.size} cells from {textbox} to register"
+                        load_text = False
+                        paused = was_paused
+                        textbox = ""
+                    else:
+                        textbox += event.unicode
+                        last_op = op + textbox
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == pygame.BUTTON_LEFT:
                     lmb_down = True
@@ -251,6 +289,26 @@ def ui(config: vizState):
                 elif event.key == pygame.K_ESCAPE:
                     insert = False
                     visual = False
+                # saving, loading
+                elif (event.key == pygame.K_w) or (event.key == pygame.K_s and event.mod & pygame.KMOD_CTRL):
+                    was_paused = paused
+                    paused = True
+                    save = True
+                    load_text = True
+                    if not (insert or visual):
+                        ix, iy = 0, 0
+                        vx, vy = universe.shape[0] - 1, universe.shape[1] - 1
+                    elif not visual:
+                        vx, vy = ix, iy
+                    last_op = "Save to: "
+                    op = last_op
+                elif (event.key == pygame.K_e) or (event.key == pygame.K_o and event.mod & pygame.KMOD_CTRL):
+                    was_paused = paused
+                    paused = True
+                    load = True
+                    load_text = True
+                    last_op = "Load from: "
+                    op = last_op
                 # various
                 elif (event.key == pygame.K_a and event.mod & pygame.KMOD_CTRL):
                     insert = False
@@ -343,6 +401,7 @@ def ui(config: vizState):
         if last_op is not prev_op:
             text_last_op = font.render(last_op, True, config.colors[0])
             prev_op = last_op
+            print("rendered")
         rect = text_last_op.get_rect()
         rect.bottomleft = (LAST_OP_OFFSET, screen_dims[1])
         screen.blit(text_last_op, rect)

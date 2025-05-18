@@ -2,13 +2,14 @@ from typing import List, Tuple
 import numpy as np
 from numpy.typing import NDArray
 from .ca import CA, NoRule
+from .io import save_to, load_from
 
 class vizState:
     def __init__(self):
         self.screen_dims: Tuple[int, int] = (1280, 720)
         self.cell_size = 20
         self.ca: CA = NoRule()
-        self.universe = np.zeros((100, 100), dtype=np.int8)
+        self.universe: NDArray = np.zeros((100, 100), dtype=np.int8)
         self.dtype = np.int8
         self.fps_desired: int | float = 60
         self.ups_desired: int | float = 5
@@ -94,6 +95,7 @@ def reset():
 
 def clear():
     _config.universe.fill(0)
+    _config.generation = 0
 
 def bg_color(color: Tuple[int, int, int] | str):
     _config.colors[3] = color
@@ -140,3 +142,11 @@ def simulate(n: int):
         _config.ca(_config.universe)
         _config.generation += 1
     print("done")
+
+def save_universe(filename: str):
+    save_to(filename, _config.universe)
+    pass
+
+def load_universe(filename: str):
+    _config.universe = load_from(filename, dtype=_config.universe.dtype)
+    pass
