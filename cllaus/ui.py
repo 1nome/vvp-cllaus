@@ -410,7 +410,6 @@ def ui(config: vizState):
         if last_op is not prev_op:
             text_last_op = font.render(last_op, True, config.colors[0])
             prev_op = last_op
-            print("rendered")
         rect = text_last_op.get_rect()
         rect.bottomleft = (LAST_OP_OFFSET, screen_dims[1])
         screen.blit(text_last_op, rect)
@@ -420,11 +419,11 @@ def ui(config: vizState):
             screen.blit(text_paused, rect)
         
         # updating CA
-        if time_since_last_update > (1 / ups_desired):
+        while time_since_last_update > (1 / ups_desired):
             ups_s = 1 / time_since_last_update
             config.ca(universe)
             config.generation += 1
-            time_since_last_update = 0
+            time_since_last_update -= (1 / ups_desired)
 
         # presenting image
         pygame.display.flip()
@@ -436,7 +435,6 @@ def ui(config: vizState):
         # time step
         # too bad now:
         #   if the CA can't update in less than 1/fps_desired, fps will drop (and the app will become unresponsive)
-        #   UPS can't be higher than FPS
         dt = clock.tick(fps_desired) / 1000
         if not paused:
             time_since_last_update += dt

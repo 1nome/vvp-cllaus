@@ -27,10 +27,8 @@ Dalšími příklady CA jsou:
 
 ## Todo:
 
- - add optimized conway
  - universe expansion
  - cleaning ui code
- - jupyter examples
  - docs
  - asynchronous updates
  - repeating keys

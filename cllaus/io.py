@@ -9,11 +9,12 @@ def save_to(filename: str, arr):
     else:
         path = filename[:i]
     if len(path) > 0:
-        try:
-            os.makedirs(path)
-        except Exception as e:
-            print(f"An error occurred: {e}")
-            return False
+        if not os.path.exists(path):
+            try:
+                os.makedirs(path)
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                return False
     # if filename[-1:-5] == ".npy":
         # np.save(filename, arr)
     # else:

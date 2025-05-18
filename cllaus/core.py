@@ -35,6 +35,7 @@ def display():
 
 def rule(ca: CA):
     _config.ca = ca
+    _config.universe = np.astype(_config.universe, ca.dtype)
 
 def window_dims(dims: Tuple[int, int]):
     _config.screen_dims = dims
@@ -83,6 +84,9 @@ def paste_vals(arr: NDArray, x: int, y: int) -> int:
     _config.universe[dest_x:dest_x + size_x, dest_y:dest_y + size_y] =\
         arr[src_x:src_x + size_x, src_y:src_y + size_y]
     return size_x * size_y
+
+def paste_from(filename: str, x: int, y: int):
+    paste_vals(load_from(filename, dtype=_config.universe.dtype), x, y)
 
 def pause():
     _config.paused = True

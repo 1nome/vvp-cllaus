@@ -5,15 +5,19 @@ import numba
 
 class CA:
     def __init__(self):
-        self.name = "My CA"
-        self.next_vals = np.array([])
-        self.colors: dict[int, Tuple[int, int, int] | str] = {}
+        self.name: str
+        self.next_vals: NDArray
+        self.colors: dict[int, Tuple[int, int, int] | str]
+        self.dtype: type
     def __call__(self, universe):
         pass
 
 class NoRule(CA):
     def __init__(self):
         self.name = "Nothing"
+        self.next_vals = np.array([0], dtype = np.int8)
+        self.colors = {}
+        self.dtype = np.int8
 
 class ConwayNaive(CA):
     def __init__(self):
@@ -22,6 +26,7 @@ class ConwayNaive(CA):
         self.colors = {1: "white"}
         self.relative_neighbours = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+        self.dtype = np.int8
     
     def __call__(self, universe: NDArray[np.int8]):
         if self.n_neighbours.shape != universe.shape:
@@ -64,6 +69,7 @@ class ConwayNaiveNumba(CA):
         self.next_vals = np.array([1, 0], dtype=np.int8)
         self.colors = {1: "white"}
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+        self.dtype = np.int8
     
     def __call__(self, universe: NDArray[np.int8]):
         if self.n_neighbours.shape != universe.shape:
@@ -85,6 +91,7 @@ class ConwayStencil(CA):
         self.next_vals = np.array([1, 0], dtype=np.int8)
         self.colors = {1: "white"}
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+        self.dtype = np.int8
     
     def __call__(self, universe: NDArray[np.int8]):
         if self.n_neighbours.shape != universe.shape:
@@ -99,6 +106,7 @@ class ConwayNumpy(CA):
         self.next_vals = np.array([1, 0], dtype=np.int8)
         self.colors = {1: "white"}
         self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+        self.dtype = np.int8
     
     def __call__(self, universe: NDArray[np.int8]):
         if self.n_neighbours.shape != universe.shape:
@@ -125,6 +133,7 @@ class LangtonsAnt(CA):
             self.colors[i] = "red" if i % 2 else (128, 0, 0)
         self.next_dirs = {8: (-1, 0, 14), 9: (1, 0, 10), 10: (0, -1, 8), 11: (0, 1, 12),
                      12: (1, 0, 10), 13: (-1, 0, 14), 14: (0, 1, 12), 15: (0, -1, 8)}
+        self.dtype = np.int8
 
     def __call__(self, universe: NDArray[np.int8]):
         ants = np.where(universe & 8)
