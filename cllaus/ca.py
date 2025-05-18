@@ -6,7 +6,7 @@ class CA:
     def __init__(self):
         self.name = "My CA"
         self.next_vals = np.array([])
-        self.colors = {}
+        self.colors: dict[int, Tuple[int, int, int] | str] = {}
     def __call__(self, universe):
         pass
 
@@ -40,3 +40,25 @@ class ConwayNaive(CA):
                     universe[i, j] = 0
                 elif self.n_neighbours[i, j] == 3 and not universe[i, j]:
                     universe[i, j] = 1
+
+class LangtonsAnt(CA):
+    def __init__(self):
+        self.name = "Langton's ant"
+        self.next_vals = np.array([1, 8, 0, 0, 0, 0, 0, 0,
+                                   9, 10, 11, 12, 13, 14, 15, 0], dtype=np.int8)
+        self.colors = {1: "white"}
+        for i in range(8, 16):
+            self.colors[i] = "red" if i % 2 else (128, 0, 0)
+        self.next_dirs = {8: (-1, 0, 14), 9: (1, 0, 10), 10: (0, -1, 8), 11: (0, 1, 12),
+                     12: (1, 0, 10), 13: (-1, 0, 14), 14: (0, 1, 12), 15: (0, -1, 8)}
+
+    def __call__(self, universe: NDArray[np.int8]):
+        ants = np.where(universe & 8)
+        for i in range(ants[0].shape[0]):
+            val = int(universe[ants[0][i], ants[1][i]])
+            x, y, r = self.next_dirs[val]
+            xx = ants[0][i] + x if 0 <= ants[0][i] + x < universe.shape[0] else ants[0][i]
+            yy = ants[1][i] + y if 0 <= ants[1][i] + y < universe.shape[1] else ants[1][i]
+            universe[ants[0][i], ants[1][i]] = 0 if universe[ants[0][i], ants[1][i]] & 1 else 1
+            universe[xx, yy] = r + (universe[xx, yy] & 1)
+            pass

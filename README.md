@@ -27,11 +27,9 @@ Dalšími příklady CA jsou:
 
 ## Todo:
 
- - implement langton's ant
  - add optimized conway
  - universe expansion
  - ups changing
- - population, generation stats
  - save, load
  - cleaning ui code
  - jupyter examples

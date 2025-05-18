@@ -82,8 +82,6 @@ def ui(config: vizState):
     text_normal = font.render("NORMAL", True, config.colors[0])
     text_last_op = font.render(last_op, True, config.colors[0])
 
-    generation = 0
-
     while running:
 
         def zoom(dir, cur_x, cur_y):
@@ -229,7 +227,7 @@ def ui(config: vizState):
                         ix, iy = nx, ny
                     if not visual:
                         vx, vy = ix, iy
-                    reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]
+                    reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1].copy()
                     last_op = f"Yanked {reg.size} cells"
                 # clear (delete)
                 elif (event.key == pygame.K_d) or (event.key == pygame.K_x and event.mod & pygame.KMOD_CTRL):
@@ -239,7 +237,7 @@ def ui(config: vizState):
                         ix, iy = nx, ny
                     if not visual:
                         vx, vy = ix, iy
-                    reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1]
+                    reg = universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1].copy()
                     universe[min(ix, vx):max(ix, vx) + 1, min(iy, vy):max(iy, vy) + 1].fill(0)
                     last_op = f"Cleared {reg.size} cells"
                 # modes
@@ -286,7 +284,7 @@ def ui(config: vizState):
         if show_ups:
             stats.append(f"ups: {ups():.0f}/{ups_desired:.0f}")
         if show_generation:
-            stats.append(f"generation #{generation}")
+            stats.append(f"generation #{config.generation}")
         if show_population:
             stats.append(f"population: {np.count_nonzero(universe)}")
         
@@ -357,7 +355,7 @@ def ui(config: vizState):
         if time_since_last_update > (1 / ups_desired):
             ups_s = 1 / time_since_last_update
             config.ca(universe)
-            generation += 1
+            config.generation += 1
             time_since_last_update = 0
 
         # presenting image

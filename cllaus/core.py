@@ -21,6 +21,7 @@ class vizState:
         self.grid = False
         self.show_generation = True
         self.show_population = True
+        self.generation = 0
         
     def reset(self):
         self.__init__()
@@ -74,7 +75,7 @@ def paste_vals(arr: NDArray, x: int, y: int) -> int:
         return 0
     dest_x = x if x > 0 else 0
     dest_y = y if y > 0 else 0
-    if dest_x > _config.universe.shape[0] or dest_y > _config.universe.shape[0]:
+    if dest_x > _config.universe.shape[0] or dest_y > _config.universe.shape[1]:
         return 0
     size_x = min(arr.shape[0] - src_x, _config.universe.shape[0] - dest_x)
     size_y = min(arr.shape[1] - src_y, _config.universe.shape[1] - dest_y)
@@ -132,3 +133,10 @@ def grid_show():
 
 def grid_hide():
     _config.grid = False
+
+def simulate(n: int):
+    print("simulating...")
+    for i in range(n):
+        _config.ca(_config.universe)
+        _config.generation += 1
+    print("done")
