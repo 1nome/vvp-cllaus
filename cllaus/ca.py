@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 from typing import List, Tuple, Literal
+import numba
 
 class CA:
     def __init__(self):
@@ -40,6 +41,79 @@ class ConwayNaive(CA):
                     universe[i, j] = 0
                 elif self.n_neighbours[i, j] == 3 and not universe[i, j]:
                     universe[i, j] = 1
+
+@numba.jit(signature_or_function='void(int8[:,:],int8[:,:])', nopython=True, fastmath=True)
+def conway_numba(n_neighbours, universe):
+    relative_neighbours = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+    
+    for i in range(1, universe.shape[0] - 1):
+        for j in range(1, universe.shape[1] - 1):
+            for ii, jj in relative_neighbours:
+                if universe[i + ii, j + jj]:
+                    n_neighbours[i, j] += 1
+    for i in range(1, universe.shape[0] - 1):
+        for j in range(1, universe.shape[1] - 1):
+            if (n_neighbours[i, j] < 2 or n_neighbours[i, j] > 3) and universe[i, j]:
+                universe[i, j] = 0
+            elif n_neighbours[i, j] == 3 and not universe[i, j]:
+                universe[i, j] = 1
+
+class ConwayNaiveNumba(CA):
+    def __init__(self):
+        self.name = "Conway's game of life, jit naive implementation"
+        self.next_vals = np.array([1, 0], dtype=np.int8)
+        self.colors = {1: "white"}
+        self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+    
+    def __call__(self, universe: NDArray[np.int8]):
+        if self.n_neighbours.shape != universe.shape:
+            self.n_neighbours.resize(universe.shape)
+        self.n_neighbours.fill(0)
+        conway_numba(self.n_neighbours, universe)
+
+@numba.jit
+def conway_kernel(neighbours):
+    @numba.stencil
+    def kernel1(a):
+        tmp_sum = 0
+        return (a[0, 1] + a[1, 0] + a[0, -1] + a[-1, 0] + a[1, 1] + a[1, -1] + a[-1, -1] + a[-1, 1])
+    return kernel1(neighbours)
+
+class ConwayStencil(CA):
+    def __init__(self):
+        self.name = "Conway's game of life, numba stencil implementation"
+        self.next_vals = np.array([1, 0], dtype=np.int8)
+        self.colors = {1: "white"}
+        self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+    
+    def __call__(self, universe: NDArray[np.int8]):
+        if self.n_neighbours.shape != universe.shape:
+            self.n_neighbours.resize(universe.shape)
+        self.n_neighbours = conway_kernel(universe)
+        universe &= (self.n_neighbours == 2)
+        universe |= (self.n_neighbours == 3)
+
+class ConwayNumpy(CA):
+    def __init__(self):
+        self.name = "Conway's game of life, numpy implementation"
+        self.next_vals = np.array([1, 0], dtype=np.int8)
+        self.colors = {1: "white"}
+        self.n_neighbours = np.zeros((100, 100), dtype=np.int8)
+    
+    def __call__(self, universe: NDArray[np.int8]):
+        if self.n_neighbours.shape != universe.shape:
+            self.n_neighbours.resize(universe.shape)
+        self.n_neighbours.fill(0)
+        self.n_neighbours[:universe.shape[0] - 1, :] += universe[1:, :]
+        self.n_neighbours[1:, :] += universe[:universe.shape[0] - 1, :]
+        self.n_neighbours[:, :universe.shape[1] - 1] += universe[:, 1:]
+        self.n_neighbours[:, 1:] += universe[:, :universe.shape[1] - 1]
+        self.n_neighbours[:universe.shape[0] - 1, :universe.shape[1] - 1] += universe[1:, 1:]
+        self.n_neighbours[1:, 1:] += universe[:universe.shape[0] - 1, :universe.shape[1] - 1]
+        self.n_neighbours[:universe.shape[0] - 1, 1:] += universe[1:, :universe.shape[1] - 1]
+        self.n_neighbours[1:, :universe.shape[1] - 1] += universe[:universe.shape[0] - 1, 1:]
+        universe &= (self.n_neighbours == 2)
+        universe |= (self.n_neighbours == 3)
 
 class LangtonsAnt(CA):
     def __init__(self):

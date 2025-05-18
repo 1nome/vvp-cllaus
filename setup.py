@@ -6,7 +6,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'numpy',
-        'pygame'
+        'pygame',
+        'numba',
     ],
     entry_points={
 
